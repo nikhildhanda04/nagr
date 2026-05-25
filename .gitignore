@@ -9,6 +9,12 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+/CLAUDE.md
+/.claude/
+/AGENTS.md
+.CLAUDE.md
+.AGENTS.md
+/memory/*
 
 # testing
 /coverage
