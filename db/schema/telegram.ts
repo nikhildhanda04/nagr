@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, pgEnum, bigint } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  pgEnum,
+  bigint,
+  index,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const telegramLinkStatus = pgEnum("telegram_link_status", [
@@ -21,7 +28,10 @@ export const telegramLink = pgTable("telegram_link", {
   linkedAt: timestamp("linked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // Button-callback lookups resolve chat_id -> user (not the PK).
+  index("telegram_link_chat_idx").on(t.chatId),
+]);
 
 export type TelegramLink = typeof telegramLink.$inferSelect;
 
@@ -29,4 +39,13 @@ export type TelegramLink = typeof telegramLink.$inferSelect;
 export const telegramState = pgTable("telegram_state", {
   id: text("id").primaryKey().default("singleton"),
   lastUpdateId: bigint("last_update_id", { mode: "number" }).notNull().default(0),
+});
+
+// Webhook dedup: Telegram redelivers updates that don't get a 200. The webhook
+// inserts the update_id here (onConflictDoNothing) and skips if already seen.
+export const telegramProcessedUpdate = pgTable("telegram_processed_update", {
+  updateId: bigint("update_id", { mode: "number" }).primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });

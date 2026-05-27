@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getApiUser, unauthorized, badRequest } from "@/lib/http";
+import { getApiUser, unauthorized, badRequest, route } from "@/lib/http";
 import {
   listFriends,
   listIncoming,
@@ -8,7 +8,7 @@ import {
   sendRequest,
 } from "@/lib/friends";
 
-export async function GET() {
+export const GET = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -18,11 +18,11 @@ export async function GET() {
     listOutgoing(user.id),
   ]);
   return NextResponse.json({ friends, incoming, outgoing });
-}
+});
 
 const requestSchema = z.object({ email: z.email() });
 
-export async function POST(req: Request) {
+export const POST = route(async (req: Request) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -33,4 +33,4 @@ export async function POST(req: Request) {
   const result = await sendRequest(user.id, parsed.data.email);
   const status = result === "not_found" ? 404 : result === "self" ? 400 : 200;
   return NextResponse.json({ result }, { status });
-}
+});

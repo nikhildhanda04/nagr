@@ -6,6 +6,7 @@ import {
   uuid,
   integer,
   boolean,
+  index,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -34,6 +35,10 @@ export const task = pgTable("task", {
   shamedAt: timestamp("shamed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("task_nag_idx").on(t.status, t.nextNagAt), // nag scan
+  index("task_shame_idx").on(t.isPublic, t.status, t.dueAt), // shame scan
+  index("task_user_idx").on(t.userId), // per-user listing
+]);
 
 export type Task = typeof task.$inferSelect;

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getApiUser, unauthorized, badRequest, notFound } from "@/lib/http";
+import { getApiUser, unauthorized, badRequest, notFound, route } from "@/lib/http";
 import { getTask, updateTask, setTaskStatus, deleteTask } from "@/lib/tasks";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, ctx: Ctx) {
+export const GET = route(async (_req: Request, ctx: Ctx) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -13,7 +13,7 @@ export async function GET(_req: Request, ctx: Ctx) {
   const task = await getTask(user.id, id);
   if (!task) return notFound();
   return NextResponse.json({ task });
-}
+});
 
 const patchSchema = z
   .object({
@@ -28,7 +28,7 @@ const patchSchema = z
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
 
-export async function PATCH(req: Request, ctx: Ctx) {
+export const PATCH = route(async (req: Request, ctx: Ctx) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -68,9 +68,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
   const task = await getTask(user.id, id);
   return NextResponse.json({ task });
-}
+});
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export const DELETE = route(async (_req: Request, ctx: Ctx) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -80,4 +80,4 @@ export async function DELETE(_req: Request, ctx: Ctx) {
 
   await deleteTask(user.id, id);
   return NextResponse.json({ ok: true });
-}
+});

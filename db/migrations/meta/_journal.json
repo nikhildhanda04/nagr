@@ -29,6 +29,13 @@
       "when": 1779869291693,
       "tag": "0003_abandoned_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779873715559,
+      "tag": "0004_lowly_pyro",
+      "breakpoints": true
     }
   ]
 }

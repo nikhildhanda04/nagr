@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getApiUser, unauthorized, badRequest } from "@/lib/http";
+import { getApiUser, unauthorized, badRequest, route } from "@/lib/http";
 import { getUserTasks, createTask } from "@/lib/tasks";
 
-export async function GET() {
+export const GET = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
   const tasks = await getUserTasks(user.id);
   return NextResponse.json({ tasks });
-}
+});
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(500),
@@ -21,7 +21,7 @@ const createSchema = z.object({
   publicAlias: z.string().trim().max(200).nullable().optional(),
 });
 
-export async function POST(req: Request) {
+export const POST = route(async (req: Request) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -39,4 +39,4 @@ export async function POST(req: Request) {
     publicAlias: parsed.data.publicAlias,
   });
   return NextResponse.json({ task }, { status: 201 });
-}
+});

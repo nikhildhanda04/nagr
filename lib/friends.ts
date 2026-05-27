@@ -1,4 +1,4 @@
-import { and, eq, or, inArray } from "drizzle-orm";
+import { and, eq, or, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { friendship, user } from "@/db/schema";
 
@@ -96,10 +96,11 @@ export async function sendRequest(
   userId: string,
   email: string,
 ): Promise<RequestResult> {
+  // Case-insensitive match regardless of how the email was stored.
   const [target] = await db
     .select({ id: user.id })
     .from(user)
-    .where(eq(user.email, email.trim().toLowerCase()))
+    .where(sql`lower(${user.email}) = ${email.trim().toLowerCase()}`)
     .limit(1);
   if (!target) return "not_found";
   if (target.id === userId) return "self";

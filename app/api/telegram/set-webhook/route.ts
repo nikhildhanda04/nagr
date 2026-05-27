@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getApiUser, unauthorized } from "@/lib/http";
+import { getApiUser, unauthorized, route } from "@/lib/http";
 import {
   isWebhookMode,
   webhookEndpoint,
@@ -8,7 +8,7 @@ import {
 import { setWebhook, deleteWebhook, getWebhookInfo } from "@/lib/telegram/api";
 
 // Register the webhook from TELEGRAM_WEBHOOK_URL (or remove it if unset).
-export async function POST() {
+export const POST = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -19,12 +19,12 @@ export async function POST() {
   await setWebhook(webhookEndpoint(), webhookSecret());
   const info = await getWebhookInfo();
   return NextResponse.json({ mode: "webhook", url: info.url });
-}
+});
 
-export async function DELETE() {
+export const DELETE = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
   await deleteWebhook();
   return NextResponse.json({ ok: true });
-}
+});

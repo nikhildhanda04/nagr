@@ -21,3 +21,20 @@ export function cronAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   return !!secret && req.headers.get("authorization") === `Bearer ${secret}`;
 }
+
+/** Wrap a route handler so any unhandled error returns a structured 500. */
+export function route<A extends unknown[]>(
+  handler: (...args: A) => Promise<Response>,
+): (...args: A) => Promise<Response> {
+  return async (...args: A) => {
+    try {
+      return await handler(...args);
+    } catch (err) {
+      console.error("unhandled route error", err);
+      return NextResponse.json(
+        { error: "Internal Server Error" },
+        { status: 500 },
+      );
+    }
+  };
+}

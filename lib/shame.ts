@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, lte, inArray, desc } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, lte, inArray, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { task, user, shameEvent } from "@/db/schema";
 import { friendIds } from "./friends";
@@ -29,6 +29,7 @@ export async function runShamePass(now: Date = new Date()): Promise<ShameResult>
       and(
         eq(task.isPublic, true),
         eq(task.status, "open"),
+        isNull(task.shamedAt), // shame each task at most once, even if reopened
         isNotNull(task.dueAt),
         lte(task.dueAt, now),
       ),
@@ -65,11 +66,16 @@ export async function runShamePass(now: Date = new Date()): Promise<ShameResult>
       .where(and(inArray(user.id, ids), eq(user.receiveShame, true)));
 
     for (const r of recipients) {
-      const res = await sendToUser(
-        r.id,
-        `🔴 <b>${escapeHtml(c.ownerName)}</b> failed: ${escapeHtml(display)}`,
-      );
-      if (res.sent) blasted++;
+      // Isolate each blast — one blocked friend must not abort the fan-out.
+      try {
+        const res = await sendToUser(
+          r.id,
+          `🔴 <b>${escapeHtml(c.ownerName)}</b> failed: ${escapeHtml(display)}`,
+        );
+        if (res.sent) blasted++;
+      } catch (err) {
+        console.error("shame blast failed to", r.id, err);
+      }
     }
   }
 

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { getApiUser, unauthorized, badRequest } from "@/lib/http";
+import { getApiUser, unauthorized, badRequest, route } from "@/lib/http";
 import { db } from "@/db";
 import { user as userTable } from "@/db/schema";
 
-export async function GET() {
+export const GET = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json({
     user: { id: user.id, name: user.name, email: user.email, ...settings },
   });
-}
+});
 
 const patchSchema = z
   .object({
@@ -35,7 +35,7 @@ const patchSchema = z
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
 
-export async function PATCH(req: Request) {
+export const PATCH = route(async (req: Request) => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -48,4 +48,4 @@ export async function PATCH(req: Request) {
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(eq(userTable.id, user.id));
   return NextResponse.json({ ok: true });
-}
+});

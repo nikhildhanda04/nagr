@@ -64,11 +64,20 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
       skippedQuiet++;
       continue; // don't bump nextNagAt → resumes after quiet hours
     }
-    await sendTaskReminder(r.userId, {
-      id: r.id,
-      title: r.title,
-      dueAt: r.dueAt,
-    });
+    // Per-task isolation: a single failed send (e.g. user blocked the bot)
+    // must not abort the whole pass or starve other users.
+    try {
+      const res = await sendTaskReminder(r.userId, {
+        id: r.id,
+        title: r.title,
+        dueAt: r.dueAt,
+      });
+      if (res.sent) sent++;
+    } catch (err) {
+      console.error("nag send failed for task", r.id, err);
+    }
+    // Bump regardless of send outcome so a persistently-failing send can't
+    // wedge the loop or re-fire every tick.
     await db
       .update(task)
       .set({
@@ -77,7 +86,6 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
         updatedAt: now,
       })
       .where(eq(task.id, r.id));
-    sent++;
   }
 
   return { scanned: rows.length, sent, skippedQuiet };

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getApiUser, unauthorized } from "@/lib/http";
+import { getApiUser, unauthorized, route } from "@/lib/http";
 import { getLink, createLinkToken, unlink } from "@/lib/telegram/link";
 import { getBotUsername } from "@/lib/telegram/service";
 
-export async function GET() {
+export const GET = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -14,9 +14,9 @@ export async function GET() {
     chatId: link?.chatId ?? null,
     username: link?.username ?? null,
   });
-}
+});
 
-export async function POST() {
+export const POST = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -26,12 +26,12 @@ export async function POST() {
     deepLink: `https://t.me/${botUsername}?start=${token}`,
     botUsername,
   });
-}
+});
 
-export async function DELETE() {
+export const DELETE = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
   await unlink(user.id);
   return NextResponse.json({ ok: true });
-}
+});

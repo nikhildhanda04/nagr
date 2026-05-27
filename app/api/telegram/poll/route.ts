@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { getApiUser, unauthorized } from "@/lib/http";
+import { getApiUser, unauthorized, route } from "@/lib/http";
 import { isWebhookMode } from "@/lib/telegram/config";
 import { getUpdates, getWebhookInfo } from "@/lib/telegram/api";
 import { handleUpdate } from "@/lib/telegram/service";
@@ -9,7 +9,7 @@ import { telegramState } from "@/db/schema";
 
 // On-demand polling for local dev (no public webhook). Mutually exclusive with
 // webhook mode — Telegram blocks getUpdates while a webhook is set.
-export async function POST() {
+export const POST = route(async () => {
   const user = await getApiUser();
   if (!user) return unauthorized();
 
@@ -52,4 +52,4 @@ export async function POST() {
   }
 
   return NextResponse.json({ processed: updates.length, lastUpdateId: maxId });
-}
+});
