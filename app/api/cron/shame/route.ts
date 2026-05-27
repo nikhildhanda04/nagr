@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { runNagPass } from "@/lib/nag";
+import { runShamePass } from "@/lib/shame";
 import { cronAuthorized } from "@/lib/http";
 
-// Runs one nag pass. Guard with CRON_SECRET (Vercel Cron sends it as a Bearer
-// token via GET; POST works too for manual/external schedulers).
+// Fail-detection + shame fan-out pass. Guard with CRON_SECRET.
 async function handle(req: Request) {
   if (!cronAuthorized(req)) return new Response("forbidden", { status: 403 });
-  const result = await runNagPass();
+  const result = await runShamePass();
   return NextResponse.json(result);
 }
 

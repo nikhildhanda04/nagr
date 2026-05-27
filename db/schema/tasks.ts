@@ -5,10 +5,11 @@ import {
   pgEnum,
   uuid,
   integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
-export const taskStatus = pgEnum("task_status", ["open", "done"]);
+export const taskStatus = pgEnum("task_status", ["open", "done", "failed"]);
 
 export const task = pgTable("task", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -25,6 +26,12 @@ export const task = pgTable("task", {
   nagIntervalSec: integer("nag_interval_sec").notNull().default(900),
   nextNagAt: timestamp("next_nag_at", { withTimezone: true }),
   lastNagAt: timestamp("last_nag_at", { withTimezone: true }),
+  // Shame Mode (Phase 4). isPublic = consent to be shamed for this task.
+  // Fail = open past dueAt + graceSec. publicAlias hides the real title publicly.
+  isPublic: boolean("is_public").notNull().default(false),
+  graceSec: integer("grace_sec").notNull().default(0),
+  publicAlias: text("public_alias"),
+  shamedAt: timestamp("shamed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

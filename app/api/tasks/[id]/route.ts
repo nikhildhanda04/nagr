@@ -21,6 +21,9 @@ const patchSchema = z
     dueAt: z.coerce.date().nullable().optional(),
     notes: z.string().trim().max(2000).nullable().optional(),
     nagIntervalSec: z.number().int().min(30).max(86400).optional(),
+    isPublic: z.boolean().optional(),
+    graceSec: z.number().int().min(0).max(86400).optional(),
+    publicAlias: z.string().trim().max(200).nullable().optional(),
     status: z.enum(["open", "done"]).optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
@@ -37,7 +40,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.flatten());
 
-  const { status, title, dueAt, notes, nagIntervalSec } = parsed.data;
+  const { status, title, dueAt, notes, nagIntervalSec, isPublic, graceSec, publicAlias } =
+    parsed.data;
 
   if (status !== undefined) {
     await setTaskStatus(user.id, id, status === "done");
@@ -46,9 +50,20 @@ export async function PATCH(req: Request, ctx: Ctx) {
     title !== undefined ||
     dueAt !== undefined ||
     notes !== undefined ||
-    nagIntervalSec !== undefined
+    nagIntervalSec !== undefined ||
+    isPublic !== undefined ||
+    graceSec !== undefined ||
+    publicAlias !== undefined
   ) {
-    await updateTask(user.id, id, { title, dueAt, notes, nagIntervalSec });
+    await updateTask(user.id, id, {
+      title,
+      dueAt,
+      notes,
+      nagIntervalSec,
+      isPublic,
+      graceSec,
+      publicAlias,
+    });
   }
 
   const task = await getTask(user.id, id);

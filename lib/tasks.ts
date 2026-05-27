@@ -7,6 +7,9 @@ export type NewTaskInput = {
   dueAt?: Date | null;
   notes?: string | null;
   nagIntervalSec?: number;
+  isPublic?: boolean;
+  graceSec?: number;
+  publicAlias?: string | null;
 };
 
 export async function getUserTasks(userId: string): Promise<Task[]> {
@@ -42,6 +45,11 @@ export async function createTask(
       dueAt,
       notes: input.notes ?? null,
       ...(input.nagIntervalSec ? { nagIntervalSec: input.nagIntervalSec } : {}),
+      ...(input.isPublic !== undefined ? { isPublic: input.isPublic } : {}),
+      ...(input.graceSec !== undefined ? { graceSec: input.graceSec } : {}),
+      ...(input.publicAlias !== undefined
+        ? { publicAlias: input.publicAlias }
+        : {}),
       // First nag fires at the due time; no due date = never nagged.
       nextNagAt: dueAt,
     })
@@ -92,6 +100,11 @@ export async function updateTask(
       ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
       ...(patch.nagIntervalSec !== undefined
         ? { nagIntervalSec: patch.nagIntervalSec }
+        : {}),
+      ...(patch.isPublic !== undefined ? { isPublic: patch.isPublic } : {}),
+      ...(patch.graceSec !== undefined ? { graceSec: patch.graceSec } : {}),
+      ...(patch.publicAlias !== undefined
+        ? { publicAlias: patch.publicAlias }
         : {}),
       // Changing the due date reschedules the next nag to it.
       ...(patch.dueAt !== undefined

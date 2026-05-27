@@ -16,6 +16,9 @@ const createSchema = z.object({
   dueAt: z.coerce.date().nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
   nagIntervalSec: z.number().int().min(30).max(86400).optional(),
+  isPublic: z.boolean().optional(),
+  graceSec: z.number().int().min(0).max(86400).optional(),
+  publicAlias: z.string().trim().max(200).nullable().optional(),
 });
 
 export async function POST(req: Request) {
@@ -31,6 +34,9 @@ export async function POST(req: Request) {
     dueAt: parsed.data.dueAt ?? null,
     notes: parsed.data.notes ?? null,
     nagIntervalSec: parsed.data.nagIntervalSec,
+    isPublic: parsed.data.isPublic,
+    graceSec: parsed.data.graceSec,
+    publicAlias: parsed.data.publicAlias,
   });
   return NextResponse.json({ task }, { status: 201 });
 }

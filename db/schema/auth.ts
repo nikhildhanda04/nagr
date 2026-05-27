@@ -16,6 +16,8 @@ export const user = pgTable("user", {
   timezone: text("timezone"),
   quietHoursStart: integer("quiet_hours_start"),
   quietHoursEnd: integer("quiet_hours_end"),
+  // Shame Mode: opt-out of receiving friends' failure blasts (default on).
+  receiveShame: boolean("receive_shame").notNull().default(true),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),

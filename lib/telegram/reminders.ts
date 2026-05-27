@@ -1,10 +1,7 @@
 import { sendToUser } from "./service";
+import { escapeHtml } from "./format";
 
 export type ReminderTask = { id: string; title: string; dueAt: Date | null };
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 /** Send a nag for a task, with Done + snooze buttons. */
 export async function sendTaskReminder(userId: string, task: ReminderTask) {

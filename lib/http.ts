@@ -15,3 +15,9 @@ export const badRequest = (details?: unknown) =>
 
 export const notFound = () =>
   NextResponse.json({ error: "Not Found" }, { status: 404 });
+
+/** True if the request carries the CRON_SECRET as a Bearer token. */
+export function cronAuthorized(req: Request): boolean {
+  const secret = process.env.CRON_SECRET;
+  return !!secret && req.headers.get("authorization") === `Bearer ${secret}`;
+}
