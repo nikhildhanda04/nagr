@@ -20,6 +20,7 @@ const patchSchema = z
     title: z.string().trim().min(1).max(500).optional(),
     dueAt: z.coerce.date().nullable().optional(),
     notes: z.string().trim().max(2000).nullable().optional(),
+    nagIntervalSec: z.number().int().min(30).max(86400).optional(),
     status: z.enum(["open", "done"]).optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
@@ -36,13 +37,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.flatten());
 
-  const { status, title, dueAt, notes } = parsed.data;
+  const { status, title, dueAt, notes, nagIntervalSec } = parsed.data;
 
   if (status !== undefined) {
     await setTaskStatus(user.id, id, status === "done");
   }
-  if (title !== undefined || dueAt !== undefined || notes !== undefined) {
-    await updateTask(user.id, id, { title, dueAt, notes });
+  if (
+    title !== undefined ||
+    dueAt !== undefined ||
+    notes !== undefined ||
+    nagIntervalSec !== undefined
+  ) {
+    await updateTask(user.id, id, { title, dueAt, notes, nagIntervalSec });
   }
 
   const task = await getTask(user.id, id);

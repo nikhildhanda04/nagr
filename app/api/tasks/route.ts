@@ -15,6 +15,7 @@ const createSchema = z.object({
   title: z.string().trim().min(1).max(500),
   dueAt: z.coerce.date().nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
+  nagIntervalSec: z.number().int().min(30).max(86400).optional(),
 });
 
 export async function POST(req: Request) {
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
     title: parsed.data.title,
     dueAt: parsed.data.dueAt ?? null,
     notes: parsed.data.notes ?? null,
+    nagIntervalSec: parsed.data.nagIntervalSec,
   });
   return NextResponse.json({ task }, { status: 201 });
 }

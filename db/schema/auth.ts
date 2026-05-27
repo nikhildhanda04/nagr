@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 // Better Auth core schema. Property keys (camelCase) are the field names Better
 // Auth maps to; DB column names (snake_case) are cosmetic.
@@ -11,8 +11,11 @@ export const user = pgTable("user", {
     .$defaultFn(() => false)
     .notNull(),
   image: text("image"),
-  // App-specific profile fields (Phase 3 uses tz + quiet hours).
+  // App-specific profile fields. Quiet hours are minutes-of-day (0-1439) in
+  // `timezone`; null = quiet hours off (default).
   timezone: text("timezone"),
+  quietHoursStart: integer("quiet_hours_start"),
+  quietHoursEnd: integer("quiet_hours_end"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),

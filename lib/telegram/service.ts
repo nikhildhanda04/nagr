@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { telegramLink } from "@/db/schema";
-import { setTaskStatus } from "@/lib/tasks";
+import { setTaskStatus, snoozeTask } from "@/lib/tasks";
 import {
   getMe,
   sendMessage,
@@ -62,14 +62,21 @@ async function handleMessage(msg: TgMessage): Promise<void> {
   );
 }
 
+// Callback queries expire after a few minutes; answering an expired one errors.
+// Never let that throw — it would crash the update loop / wedge the poll cursor.
+async function safeAnswer(id: string, text?: string): Promise<void> {
+  try {
+    await answerCallbackQuery(id, text);
+  } catch (err) {
+    console.error("answerCallbackQuery failed (likely expired)", err);
+  }
+}
+
 async function handleCallback(cq: TgCallbackQuery): Promise<void> {
   const chatId = cq.message?.chat.id;
   const data = cq.data ?? "";
 
-  if (chatId === undefined) {
-    await answerCallbackQuery(cq.id);
-    return;
-  }
+  if (chatId === undefined) return safeAnswer(cq.id);
 
   const [link] = await db
     .select()
@@ -78,18 +85,23 @@ async function handleCallback(cq: TgCallbackQuery): Promise<void> {
     .limit(1);
 
   if (!link || link.status !== "linked") {
-    await answerCallbackQuery(cq.id, "This chat isn't linked.");
-    return;
+    return safeAnswer(cq.id, "This chat isn't linked.");
   }
 
   if (data.startsWith("done:")) {
     const taskId = data.slice("done:".length);
     await setTaskStatus(link.userId, taskId, true); // ownership-scoped
-    await answerCallbackQuery(cq.id, "Marked done ✅");
-    return;
+    return safeAnswer(cq.id, "Marked done ✅");
   }
 
-  await answerCallbackQuery(cq.id);
+  if (data.startsWith("snooze:")) {
+    const [, taskId, secStr] = data.split(":");
+    const seconds = Number(secStr) || 600;
+    await snoozeTask(link.userId, taskId, seconds);
+    return safeAnswer(cq.id, `Snoozed ${Math.round(seconds / 60)}m 💤`);
+  }
+
+  return safeAnswer(cq.id);
 }
 
 /** Send a message to a user's linked chat. No-op result if not linked. */

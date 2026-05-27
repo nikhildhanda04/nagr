@@ -32,7 +32,12 @@ export async function POST() {
 
   let maxId = state?.lastUpdateId ?? 0;
   for (const u of updates) {
-    await handleUpdate(u);
+    try {
+      await handleUpdate(u);
+    } catch (err) {
+      console.error("handleUpdate failed for update", u.update_id, err);
+    }
+    // Advance the cursor regardless so one bad update can't block the queue.
     if (u.update_id > maxId) maxId = u.update_id;
   }
 
