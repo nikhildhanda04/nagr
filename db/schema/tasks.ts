@@ -12,6 +12,13 @@ import { user } from "./auth";
 
 export const taskStatus = pgEnum("task_status", ["open", "done", "failed"]);
 
+export const taskRecurrence = pgEnum("task_recurrence", [
+  "none",
+  "daily",
+  "weekly",
+  "monthly",
+]);
+
 export const task = pgTable("task", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
@@ -27,6 +34,12 @@ export const task = pgTable("task", {
   nagIntervalSec: integer("nag_interval_sec").notNull().default(900),
   nextNagAt: timestamp("next_nag_at", { withTimezone: true }),
   lastNagAt: timestamp("last_nag_at", { withTimezone: true }),
+  // Escalation: when true, the effective nag interval shrinks the longer it's
+  // overdue. snoozeCount surfaces "snoozed N×" guilt.
+  escalate: boolean("escalate").notNull().default(false),
+  snoozeCount: integer("snooze_count").notNull().default(0),
+  // Recurrence: completing a recurring task spawns the next occurrence.
+  recurrence: taskRecurrence("recurrence").notNull().default("none"),
   // Shame Mode (Phase 4). isPublic = consent to be shamed for this task.
   // Fail = open past dueAt + graceSec. publicAlias hides the real title publicly.
   isPublic: boolean("is_public").notNull().default(false),

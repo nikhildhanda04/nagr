@@ -1,6 +1,8 @@
 import { db } from "@/db";
 import { task, type Task } from "@/db/schema";
-import { and, eq, asc } from "drizzle-orm";
+import { and, eq, asc, sql } from "drizzle-orm";
+
+export type Recurrence = "none" | "daily" | "weekly" | "monthly";
 
 export type NewTaskInput = {
   title: string;
@@ -10,7 +12,25 @@ export type NewTaskInput = {
   isPublic?: boolean;
   graceSec?: number;
   publicAlias?: string | null;
+  escalate?: boolean;
+  recurrence?: Recurrence;
 };
+
+function addInterval(d: Date, recurrence: Recurrence): Date {
+  const x = new Date(d);
+  if (recurrence === "daily") x.setDate(x.getDate() + 1);
+  else if (recurrence === "weekly") x.setDate(x.getDate() + 7);
+  else if (recurrence === "monthly") x.setMonth(x.getMonth() + 1);
+  return x;
+}
+
+/** Next occurrence strictly after `now` (skips past ones if completed late). */
+function nextFutureOccurrence(from: Date, recurrence: Recurrence, now: Date): Date {
+  let next = addInterval(from, recurrence);
+  let guard = 0;
+  while (next <= now && guard++ < 1000) next = addInterval(next, recurrence);
+  return next;
+}
 
 export async function getUserTasks(userId: string): Promise<Task[]> {
   return db
@@ -50,6 +70,8 @@ export async function createTask(
       ...(input.publicAlias !== undefined
         ? { publicAlias: input.publicAlias }
         : {}),
+      ...(input.escalate !== undefined ? { escalate: input.escalate } : {}),
+      ...(input.recurrence !== undefined ? { recurrence: input.recurrence } : {}),
       // First nag fires at the due time; no due date = never nagged.
       nextNagAt: dueAt,
     })
@@ -63,6 +85,7 @@ export async function setTaskStatus(
   done: boolean,
 ): Promise<void> {
   if (done) {
+    const existing = await getTask(userId, id);
     await db
       .update(task)
       .set({
@@ -72,10 +95,32 @@ export async function setTaskStatus(
         updatedAt: new Date(),
       })
       .where(and(eq(task.id, id), eq(task.userId, userId)));
+
+    // Recurring: spawn the next occurrence as a fresh open task.
+    if (existing && existing.recurrence !== "none" && existing.dueAt) {
+      const next = nextFutureOccurrence(
+        existing.dueAt,
+        existing.recurrence,
+        new Date(),
+      );
+      await db.insert(task).values({
+        userId,
+        title: existing.title,
+        notes: existing.notes,
+        dueAt: next,
+        nextNagAt: next,
+        nagIntervalSec: existing.nagIntervalSec,
+        escalate: existing.escalate,
+        recurrence: existing.recurrence,
+        isPublic: existing.isPublic,
+        graceSec: existing.graceSec,
+        publicAlias: existing.publicAlias,
+      });
+    }
     return;
   }
 
-  // Reopen: resume nagging from the due time (the nag pass handles overdue).
+  // Reopen: resume nagging from the due time.
   const existing = await getTask(userId, id);
   await db
     .update(task)
@@ -86,6 +131,18 @@ export async function setTaskStatus(
       updatedAt: new Date(),
     })
     .where(and(eq(task.id, id), eq(task.userId, userId)));
+}
+
+/** Skip the current occurrence of a recurring task — roll it to the next one. */
+export async function skipTask(userId: string, id: string): Promise<boolean> {
+  const t = await getTask(userId, id);
+  if (!t || t.recurrence === "none" || !t.dueAt) return false;
+  const next = nextFutureOccurrence(t.dueAt, t.recurrence, new Date());
+  await db
+    .update(task)
+    .set({ dueAt: next, nextNagAt: next, snoozeCount: 0, updatedAt: new Date() })
+    .where(and(eq(task.id, id), eq(task.userId, userId)));
+  return true;
 }
 
 export async function updateTask(
@@ -106,6 +163,10 @@ export async function updateTask(
       ...(patch.publicAlias !== undefined
         ? { publicAlias: patch.publicAlias }
         : {}),
+      ...(patch.escalate !== undefined ? { escalate: patch.escalate } : {}),
+      ...(patch.recurrence !== undefined
+        ? { recurrence: patch.recurrence }
+        : {}),
       // Changing the due date reschedules the next nag to it.
       ...(patch.dueAt !== undefined
         ? { dueAt: patch.dueAt, nextNagAt: patch.dueAt }
@@ -115,7 +176,7 @@ export async function updateTask(
     .where(and(eq(task.id, id), eq(task.userId, userId)));
 }
 
-/** Push the next nag forward by `seconds` (task stays open). */
+/** Push the next nag forward by `seconds` and bump the snooze counter. */
 export async function snoozeTask(
   userId: string,
   id: string,
@@ -125,6 +186,7 @@ export async function snoozeTask(
     .update(task)
     .set({
       nextNagAt: new Date(Date.now() + seconds * 1000),
+      snoozeCount: sql`${task.snoozeCount} + 1`,
       updatedAt: new Date(),
     })
     .where(and(eq(task.id, id), eq(task.userId, userId)));

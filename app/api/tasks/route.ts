@@ -19,6 +19,8 @@ const createSchema = z.object({
   isPublic: z.boolean().optional(),
   graceSec: z.number().int().min(0).max(86400).optional(),
   publicAlias: z.string().trim().max(200).nullable().optional(),
+  escalate: z.boolean().optional(),
+  recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional(),
 });
 
 export const POST = route(async (req: Request) => {
@@ -37,6 +39,8 @@ export const POST = route(async (req: Request) => {
     isPublic: parsed.data.isPublic,
     graceSec: parsed.data.graceSec,
     publicAlias: parsed.data.publicAlias,
+    escalate: parsed.data.escalate,
+    recurrence: parsed.data.recurrence,
   });
   return NextResponse.json({ task }, { status: 201 });
 });

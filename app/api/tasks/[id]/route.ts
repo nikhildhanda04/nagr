@@ -24,6 +24,8 @@ const patchSchema = z
     isPublic: z.boolean().optional(),
     graceSec: z.number().int().min(0).max(86400).optional(),
     publicAlias: z.string().trim().max(200).nullable().optional(),
+    escalate: z.boolean().optional(),
+    recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional(),
     status: z.enum(["open", "done"]).optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
@@ -40,8 +42,18 @@ export const PATCH = route(async (req: Request, ctx: Ctx) => {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return badRequest(parsed.error.flatten());
 
-  const { status, title, dueAt, notes, nagIntervalSec, isPublic, graceSec, publicAlias } =
-    parsed.data;
+  const {
+    status,
+    title,
+    dueAt,
+    notes,
+    nagIntervalSec,
+    isPublic,
+    graceSec,
+    publicAlias,
+    escalate,
+    recurrence,
+  } = parsed.data;
 
   if (status !== undefined) {
     await setTaskStatus(user.id, id, status === "done");
@@ -53,7 +65,9 @@ export const PATCH = route(async (req: Request, ctx: Ctx) => {
     nagIntervalSec !== undefined ||
     isPublic !== undefined ||
     graceSec !== undefined ||
-    publicAlias !== undefined
+    publicAlias !== undefined ||
+    escalate !== undefined ||
+    recurrence !== undefined
   ) {
     await updateTask(user.id, id, {
       title,
@@ -63,6 +77,8 @@ export const PATCH = route(async (req: Request, ctx: Ctx) => {
       isPublic,
       graceSec,
       publicAlias,
+      escalate,
+      recurrence,
     });
   }
 

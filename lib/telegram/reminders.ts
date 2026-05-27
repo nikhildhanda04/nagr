@@ -1,12 +1,21 @@
 import { sendToUser } from "./service";
 import { escapeHtml } from "./format";
 
-export type ReminderTask = { id: string; title: string; dueAt: Date | null };
+export type ReminderTask = {
+  id: string;
+  title: string;
+  dueAt: Date | null;
+  snoozeCount?: number;
+};
 
 /** Send a nag for a task, with Done + snooze buttons. */
 export async function sendTaskReminder(userId: string, task: ReminderTask) {
   const due = task.dueAt ? ` — due ${new Date(task.dueAt).toLocaleString()}` : "";
-  return sendToUser(userId, `⏰ <b>${escapeHtml(task.title)}</b>${due}`, {
+  const snoozed =
+    task.snoozeCount && task.snoozeCount > 0
+      ? ` <i>(snoozed ${task.snoozeCount}×)</i>`
+      : "";
+  return sendToUser(userId, `⏰ <b>${escapeHtml(task.title)}</b>${due}${snoozed}`, {
     replyMarkup: {
       inline_keyboard: [
         [

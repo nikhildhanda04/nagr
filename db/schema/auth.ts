@@ -18,6 +18,11 @@ export const user = pgTable("user", {
   quietHoursEnd: integer("quiet_hours_end"),
   // Shame Mode: opt-out of receiving friends' failure blasts (default on).
   receiveShame: boolean("receive_shame").notNull().default(true),
+  // Daily digest hours (0-23, local to `timezone`; null = that digest off).
+  // lastDigestKey = "<YYYY-MM-DD>:<morning|night>" to fire each at most once/day.
+  morningDigestHour: integer("morning_digest_hour"),
+  nightDigestHour: integer("night_digest_hour"),
+  lastDigestKey: text("last_digest_key"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),

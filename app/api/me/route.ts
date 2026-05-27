@@ -16,6 +16,8 @@ export const GET = route(async () => {
       quietHoursStart: userTable.quietHoursStart,
       quietHoursEnd: userTable.quietHoursEnd,
       receiveShame: userTable.receiveShame,
+      morningDigestHour: userTable.morningDigestHour,
+      nightDigestHour: userTable.nightDigestHour,
     })
     .from(userTable)
     .where(eq(userTable.id, user.id))
@@ -32,6 +34,8 @@ const patchSchema = z
     quietHoursStart: z.number().int().min(0).max(1439).nullable().optional(),
     quietHoursEnd: z.number().int().min(0).max(1439).nullable().optional(),
     receiveShame: z.boolean().optional(),
+    morningDigestHour: z.number().int().min(0).max(23).nullable().optional(),
+    nightDigestHour: z.number().int().min(0).max(23).nullable().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
 
@@ -47,5 +51,15 @@ export const PATCH = route(async (req: Request) => {
     .update(userTable)
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(eq(userTable.id, user.id));
+  return NextResponse.json({ ok: true });
+});
+
+// Delete the account and all data (tasks, Telegram link, friendships, shame
+// events, sessions — all cascade off the user row).
+export const DELETE = route(async () => {
+  const user = await getApiUser();
+  if (!user) return unauthorized();
+
+  await db.delete(userTable).where(eq(userTable.id, user.id));
   return NextResponse.json({ ok: true });
 });

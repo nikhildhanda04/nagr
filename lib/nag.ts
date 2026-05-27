@@ -26,6 +26,19 @@ function inQuietHours(
   return start < end ? mins >= start && mins < end : mins >= start || mins < end;
 }
 
+// Escalation ladder: the longer a task is overdue, the shorter the interval.
+function effectiveIntervalSec(
+  base: number,
+  escalate: boolean,
+  dueAt: Date | null,
+  now: Date,
+): number {
+  if (!escalate || !dueAt) return base;
+  const hoursOverdue = (now.getTime() - new Date(dueAt).getTime()) / 3_600_000;
+  const factor = hoursOverdue >= 3 ? 0.25 : hoursOverdue >= 1 ? 0.5 : 1;
+  return Math.max(60, Math.floor(base * factor));
+}
+
 export type NagResult = { scanned: number; sent: number; skippedQuiet: number };
 
 /**
@@ -40,6 +53,8 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
       title: task.title,
       dueAt: task.dueAt,
       nagIntervalSec: task.nagIntervalSec,
+      escalate: task.escalate,
+      snoozeCount: task.snoozeCount,
       tz: user.timezone,
       qStart: user.quietHoursStart,
       qEnd: user.quietHoursEnd,
@@ -71,18 +86,20 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
         id: r.id,
         title: r.title,
         dueAt: r.dueAt,
+        snoozeCount: r.snoozeCount,
       });
       if (res.sent) sent++;
     } catch (err) {
       console.error("nag send failed for task", r.id, err);
     }
     // Bump regardless of send outcome so a persistently-failing send can't
-    // wedge the loop or re-fire every tick.
+    // wedge the loop or re-fire every tick. Escalation shrinks the interval.
+    const intervalSec = effectiveIntervalSec(r.nagIntervalSec, r.escalate, r.dueAt, now);
     await db
       .update(task)
       .set({
         lastNagAt: now,
-        nextNagAt: new Date(now.getTime() + r.nagIntervalSec * 1000),
+        nextNagAt: new Date(now.getTime() + intervalSec * 1000),
         updatedAt: now,
       })
       .where(eq(task.id, r.id));
