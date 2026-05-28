@@ -23,6 +23,9 @@ export const user = pgTable("user", {
   morningDigestHour: integer("morning_digest_hour"),
   nightDigestHour: integer("night_digest_hour"),
   lastDigestKey: text("last_digest_key"),
+  // Google Calendar read-sync opt-in + last sync time.
+  googleCalendarSync: boolean("google_calendar_sync").notNull().default(false),
+  lastCalendarSyncAt: timestamp("last_calendar_sync_at", { withTimezone: true }),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),

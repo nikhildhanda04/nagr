@@ -18,6 +18,8 @@ export const GET = route(async () => {
       receiveShame: userTable.receiveShame,
       morningDigestHour: userTable.morningDigestHour,
       nightDigestHour: userTable.nightDigestHour,
+      googleCalendarSync: userTable.googleCalendarSync,
+      lastCalendarSyncAt: userTable.lastCalendarSyncAt,
     })
     .from(userTable)
     .where(eq(userTable.id, user.id))
@@ -36,6 +38,7 @@ const patchSchema = z
     receiveShame: z.boolean().optional(),
     morningDigestHour: z.number().int().min(0).max(23).nullable().optional(),
     nightDigestHour: z.number().int().min(0).max(23).nullable().optional(),
+    googleCalendarSync: z.boolean().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No fields to update" });
 

@@ -19,6 +19,15 @@ export const auth = betterAuth({
         google: {
           clientId: process.env.GOOGLE_CLIENT_ID!,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          // Calendar read access (+ a refresh token via offline/consent).
+          scope: [
+            "openid",
+            "email",
+            "profile",
+            "https://www.googleapis.com/auth/calendar.readonly",
+          ],
+          accessType: "offline",
+          prompt: "consent",
         },
       }
     : {},

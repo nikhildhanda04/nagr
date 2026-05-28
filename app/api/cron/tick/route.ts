@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runShamePass } from "@/lib/shame";
 import { runNagPass } from "@/lib/nag";
 import { runDigestPass } from "@/lib/digest";
+import { runCalendarSync, runEventReminders } from "@/lib/google-calendar";
 import { pruneProcessedUpdates } from "@/lib/telegram/service";
 import { cronAuthorized, route } from "@/lib/http";
 
@@ -14,8 +15,10 @@ const handle = route(async (req: Request) => {
   const shame = await runShamePass();
   const nag = await runNagPass();
   const digest = await runDigestPass();
+  const calendar = await runCalendarSync(); // pull Google events (throttled)
+  const eventReminders = await runEventReminders(); // ping before events
   await pruneProcessedUpdates(); // keep the webhook-dedup table from growing forever
-  return NextResponse.json({ shame, nag, digest });
+  return NextResponse.json({ shame, nag, digest, calendar, eventReminders });
 });
 
 export const GET = handle;

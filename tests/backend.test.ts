@@ -269,3 +269,32 @@ test("escalation shrinks the nag interval when overdue", async () => {
   expect(deltaSec).toBeGreaterThan(60); // not below the floor
   expect(deltaSec).toBeLessThan(900); // shrunk below the 900s base (4h → ~225s)
 });
+
+test("reminder fires once — nextNagAt cleared, not looped", async () => {
+  const u = await makeUser();
+  await linkBogus(u.id);
+  const t = await createTask(u.id, {
+    title: "take meds",
+    dueAt: new Date(Date.now() - 1000),
+    kind: "reminder",
+  });
+  await withSendsDisabled(() => runNagPass());
+  const g = await getTask(u.id, t.id);
+  expect(g?.kind).toBe("reminder");
+  expect(g?.nextNagAt).toBeNull(); // one-shot — won't nag again
+});
+
+test("recurring reminder rolls to the next occurrence after firing", async () => {
+  const u = await makeUser();
+  await linkBogus(u.id);
+  const t = await createTask(u.id, {
+    title: "daily meds",
+    dueAt: new Date(Date.now() - 1000),
+    kind: "reminder",
+    recurrence: "daily",
+  });
+  await withSendsDisabled(() => runNagPass());
+  const g = await getTask(u.id, t.id);
+  expect(g?.status).toBe("open"); // not completed, just advanced
+  expect(g?.nextNagAt?.getTime() ?? 0).toBeGreaterThan(Date.now());
+});

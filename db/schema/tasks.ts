@@ -19,6 +19,9 @@ export const taskRecurrence = pgEnum("task_recurrence", [
   "monthly",
 ]);
 
+// task = nag until done; reminder = ping once at its time (no relentless nag).
+export const taskKind = pgEnum("task_kind", ["task", "reminder"]);
+
 export const task = pgTable("task", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
@@ -26,6 +29,7 @@ export const task = pgTable("task", {
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   notes: text("notes"),
+  kind: taskKind("kind").notNull().default("task"),
   status: taskStatus("status").notNull().default("open"),
   // Nullable: a task may have no due time. timestamptz so we store an instant.
   dueAt: timestamp("due_at", { withTimezone: true }),

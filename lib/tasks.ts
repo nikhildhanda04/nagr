@@ -3,6 +3,7 @@ import { task, type Task } from "@/db/schema";
 import { and, eq, asc, sql } from "drizzle-orm";
 
 export type Recurrence = "none" | "daily" | "weekly" | "monthly";
+export type Kind = "task" | "reminder";
 
 export type NewTaskInput = {
   title: string;
@@ -14,6 +15,7 @@ export type NewTaskInput = {
   publicAlias?: string | null;
   escalate?: boolean;
   recurrence?: Recurrence;
+  kind?: Kind;
 };
 
 function addInterval(d: Date, recurrence: Recurrence): Date {
@@ -25,7 +27,11 @@ function addInterval(d: Date, recurrence: Recurrence): Date {
 }
 
 /** Next occurrence strictly after `now` (skips past ones if completed late). */
-function nextFutureOccurrence(from: Date, recurrence: Recurrence, now: Date): Date {
+export function nextFutureOccurrence(
+  from: Date,
+  recurrence: Recurrence,
+  now: Date,
+): Date {
   let next = addInterval(from, recurrence);
   let guard = 0;
   while (next <= now && guard++ < 1000) next = addInterval(next, recurrence);
@@ -72,6 +78,7 @@ export async function createTask(
         : {}),
       ...(input.escalate !== undefined ? { escalate: input.escalate } : {}),
       ...(input.recurrence !== undefined ? { recurrence: input.recurrence } : {}),
+      ...(input.kind !== undefined ? { kind: input.kind } : {}),
       // First nag fires at the due time; no due date = never nagged.
       nextNagAt: dueAt,
     })
@@ -167,6 +174,7 @@ export async function updateTask(
       ...(patch.recurrence !== undefined
         ? { recurrence: patch.recurrence }
         : {}),
+      ...(patch.kind !== undefined ? { kind: patch.kind } : {}),
       // Changing the due date reschedules the next nag to it.
       ...(patch.dueAt !== undefined
         ? { dueAt: patch.dueAt, nextNagAt: patch.dueAt }

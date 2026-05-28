@@ -2,6 +2,7 @@ import { and, eq, lte, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { task, telegramLink, user } from "@/db/schema";
 import { sendTaskReminder } from "./telegram/reminders";
+import { nextFutureOccurrence } from "@/lib/tasks";
 
 /** Current minute-of-day (0-1439) in the given IANA timezone. */
 function minutesInTz(tz: string | null, now: Date): number {
@@ -52,6 +53,8 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
       userId: task.userId,
       title: task.title,
       dueAt: task.dueAt,
+      kind: task.kind,
+      recurrence: task.recurrence,
       nagIntervalSec: task.nagIntervalSec,
       escalate: task.escalate,
       snoozeCount: task.snoozeCount,
@@ -92,14 +95,27 @@ export async function runNagPass(now: Date = new Date()): Promise<NagResult> {
     } catch (err) {
       console.error("nag send failed for task", r.id, err);
     }
-    // Bump regardless of send outcome so a persistently-failing send can't
-    // wedge the loop or re-fire every tick. Escalation shrinks the interval.
-    const intervalSec = effectiveIntervalSec(r.nagIntervalSec, r.escalate, r.dueAt, now);
+    // Reschedule. Reminders fire once (or roll to the next occurrence if
+    // recurring); tasks keep nagging on the (escalating) interval.
+    let nextNagAt: Date | null;
+    let newDueAt: Date | undefined;
+    if (r.kind === "reminder") {
+      if (r.recurrence !== "none" && r.dueAt) {
+        newDueAt = nextFutureOccurrence(r.dueAt, r.recurrence, now);
+        nextNagAt = newDueAt;
+      } else {
+        nextNagAt = null; // one-shot reminder — done pinging
+      }
+    } else {
+      const intervalSec = effectiveIntervalSec(r.nagIntervalSec, r.escalate, r.dueAt, now);
+      nextNagAt = new Date(now.getTime() + intervalSec * 1000);
+    }
     await db
       .update(task)
       .set({
         lastNagAt: now,
-        nextNagAt: new Date(now.getTime() + intervalSec * 1000),
+        nextNagAt,
+        ...(newDueAt ? { dueAt: newDueAt } : {}),
         updatedAt: now,
       })
       .where(eq(task.id, r.id));

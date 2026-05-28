@@ -50,6 +50,20 @@
       "when": 1779916205025,
       "tag": "0006_abandoned_grim_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779921765156,
+      "tag": "0007_messy_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779922644943,
+      "tag": "0008_glossy_spot",
+      "breakpoints": true
     }
   ]
 }

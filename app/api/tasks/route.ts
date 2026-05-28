@@ -21,6 +21,7 @@ const createSchema = z.object({
   publicAlias: z.string().trim().max(200).nullable().optional(),
   escalate: z.boolean().optional(),
   recurrence: z.enum(["none", "daily", "weekly", "monthly"]).optional(),
+  kind: z.enum(["task", "reminder"]).optional(),
 });
 
 export const POST = route(async (req: Request) => {
@@ -41,6 +42,7 @@ export const POST = route(async (req: Request) => {
     publicAlias: parsed.data.publicAlias,
     escalate: parsed.data.escalate,
     recurrence: parsed.data.recurrence,
+    kind: parsed.data.kind,
   });
   return NextResponse.json({ task }, { status: 201 });
 });
