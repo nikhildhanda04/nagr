@@ -38,7 +38,7 @@ export function OpeningSpread() {
       <div className="mx-auto grid w-full max-w-6xl gap-12 md:grid-cols-[1.4fr_0.6fr] md:items-end">
         <div className="relative">
           <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-muted">
-            whatstodo
+            nagr
           </p>
           <h1 className="font-[family-name:var(--font-display)] text-[clamp(2.75rem,8vw,5.5rem)] font-medium leading-[1.05] tracking-tight text-ink">
             {headlineLines.map((line, i) => (

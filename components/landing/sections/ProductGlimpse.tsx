@@ -36,7 +36,7 @@ export function ProductGlimpse() {
             <span className="h-2.5 w-2.5 rounded-full bg-ink/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-ink/15" />
             <span className="ml-3 font-mono text-[11px] text-ink-muted/60">
-              whatstodo / dashboard
+              nagr / dashboard
             </span>
           </div>
 

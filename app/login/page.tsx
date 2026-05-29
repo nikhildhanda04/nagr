@@ -10,7 +10,7 @@ export default async function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-svh max-w-md flex-col items-center justify-center px-6 text-center">
-      <Mono>whatstodo</Mono>
+      <Mono>nagr</Mono>
       <h1 className="mt-5 font-[family-name:var(--font-display)] text-4xl leading-tight text-ink">
         Sign in
       </h1>

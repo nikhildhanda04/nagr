@@ -154,7 +154,7 @@ export function PinnedThread() {
             >
               <div className="w-full max-w-md">
                 <p className="mb-4 text-center font-mono text-xs text-ink-muted">
-                  Telegram · whatstodo bot
+                  Telegram · nagr bot
                 </p>
                 <ChatThread progress={progress} reducedMotion={reducedMotion} />
               </div>
@@ -176,7 +176,7 @@ export function PinnedThread() {
           ))}
         </div>
         <p className="mb-4 text-center font-mono text-xs text-ink-muted">
-          Telegram · whatstodo bot
+          Telegram · nagr bot
         </p>
         <ChatThread
           progress={1}

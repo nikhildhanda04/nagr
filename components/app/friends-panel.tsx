@@ -13,7 +13,7 @@ const RESULT_MSG: Record<string, string> = {
   already_friends: "Already friends.",
   already_pending: "Request already pending.",
   self: "That's your own email.",
-  not_found: "No whatstodo user with that email.",
+  not_found: "No nagr user with that email.",
 };
 
 export function FriendsPanel({

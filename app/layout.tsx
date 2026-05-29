@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "whatstodo",
+  title: "nagr",
   description: "Todos that remind you in Telegram when they're due.",
 };
 

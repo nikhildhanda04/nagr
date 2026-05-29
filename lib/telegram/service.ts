@@ -59,7 +59,7 @@ async function handleMessage(msg: TgMessage): Promise<void> {
     if (!token) {
       await sendMessage(
         chatId,
-        "👋 Welcome to <b>whatstodo</b>. Open the app and tap “Connect Telegram” to link this chat.",
+        "👋 Welcome to <b>nagr</b>. Open the app and tap “Connect Telegram” to link this chat.",
       );
       return;
     }
@@ -78,7 +78,7 @@ async function handleMessage(msg: TgMessage): Promise<void> {
   if (!userId) {
     await sendMessage(
       chatId,
-      "This chat isn't linked. Open whatstodo and tap “Connect Telegram”.",
+      "This chat isn't linked. Open nagr and tap “Connect Telegram”.",
     );
     return;
   }
@@ -179,7 +179,7 @@ async function cmdHelp(chatId: string) {
   await sendMessage(
     chatId,
     [
-      "<b>whatstodo commands</b>",
+      "<b>nagr commands</b>",
       "<code>/add buy milk</code> — add a task",
       "<code>/list</code> — your open tasks",
       "<code>/done n</code> — complete task n",

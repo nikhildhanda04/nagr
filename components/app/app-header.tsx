@@ -47,7 +47,7 @@ export function AppHeader({ email }: { email: string }) {
           href="/dashboard"
           className="font-[family-name:var(--font-display)] text-lg text-ink"
         >
-          whatstodo
+          nagr
         </Link>
 
         <nav className="hidden items-center gap-4 sm:flex">

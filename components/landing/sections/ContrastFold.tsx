@@ -56,7 +56,7 @@ export function ContrastFold() {
 
           <div className="relative flex flex-col justify-center py-12 md:pl-12 md:py-0">
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-muted">
-              whatstodo
+              nagr
             </p>
             <p className="mt-6 font-[family-name:var(--font-display)] text-2xl leading-snug text-ink md:text-3xl">
               It waits in the chat you actually open—and keeps asking, politely,

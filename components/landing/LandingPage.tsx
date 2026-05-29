@@ -31,7 +31,7 @@ export function LandingPage({ authed }: { authed: boolean }) {
         <footer className="border-t border-ink/10 px-6 py-8 md:px-12">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
             <span className="font-mono text-xs text-ink-muted">
-              whatstodo · reminders in Telegram
+              nagr · reminders in Telegram
             </span>
             <nav className="flex gap-5 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-muted">
               <Link href="/docs" className="hover:text-ink">

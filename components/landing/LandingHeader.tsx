@@ -8,7 +8,7 @@ export function LandingHeader({ authed }: { authed: boolean }) {
           href="/"
           className="font-[family-name:var(--font-display)] text-lg text-ink"
         >
-          whatstodo
+          nagr
         </Link>
         <nav className="flex items-center gap-5">
           <Link

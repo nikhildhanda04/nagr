@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/dal";
 
 export const metadata: Metadata = {
-  title: "How whatstodo works",
+  title: "How nagr works",
   description:
     "Sign in, connect Telegram, and let the bot nag you — and shame you to friends — until your tasks are done.",
 };
@@ -70,7 +70,7 @@ export default async function DocsPage() {
             href={authed ? "/dashboard" : "/"}
             className="font-[family-name:var(--font-display)] text-lg text-ink"
           >
-            whatstodo
+            nagr
           </Link>
           <Link
             href={cta.href}
@@ -86,7 +86,7 @@ export default async function DocsPage() {
           Documentation
         </p>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl leading-tight text-ink md:text-5xl">
-          How whatstodo works
+          How nagr works
         </h1>
         <p className="mt-4 max-w-prose text-lg text-ink-muted">
           A to-do list that won&apos;t let you off the hook. It reminds you in
@@ -109,7 +109,7 @@ export default async function DocsPage() {
         <div className="mt-12 space-y-12">
           <Section id="what" label="Overview" title="What it is">
             <p>
-              whatstodo links your task list to a Telegram bot. Every task can
+              nagr links your task list to a Telegram bot. Every task can
               have a due time. When it&apos;s due, the bot messages you — and
               keeps messaging on a schedule until you mark it done or snooze it.
               Make a task <strong>public</strong> and your friends get notified
@@ -123,7 +123,7 @@ export default async function DocsPage() {
               <Link href="/login" className="text-accent hover:underline">
                 the sign-in page
               </Link>{" "}
-              and continue with your Google account. That&apos;s your whatstodo
+              and continue with your Google account. That&apos;s your nagr
               identity; friends add you by this email.
             </p>
           </Section>
@@ -273,7 +273,7 @@ export default async function DocsPage() {
       </main>
 
       <footer className="border-t border-ink/10 px-6 py-8 text-center font-mono text-xs text-ink-muted">
-        whatstodo · reminders in Telegram
+        nagr · reminders in Telegram
       </footer>
     </div>
   );
